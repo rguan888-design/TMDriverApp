@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="SAP TM Driver">
+<meta name="theme-color" content="#0070f2">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<title>SAP TM Driver</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+:root{
+  --f0:#0070f2;--f0d:#0057c2;--bg:#f5f6f7;--card:#fff;
+  --border:#d9d9d9;--sep:#ebebeb;
+  --txt:#32363a;--txt2:#6a6d70;--txt3:#89919a;
+  --green:#107e3e;--gbg:#f1fdf6;--gborder:#b5dfc8;
+  --amber:#c44700;--abg:#fff5ea;--aborder:#f5c27a;
+  --red:#a50000;
+  --bbg:#e8f2fd;--bbd:#a8ccf0;--bbt:#0057c2;
+  --r:10px;--rm:14px;
+  --safe-top: env(safe-area-inset-top);
+  --safe-bot: env(safe-area-inset-bottom);
+}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:-apple-system,'Helvetica Neue',Arial,sans-serif;color:var(--txt);font-size:15px;line-height:1.4}
+#app{height:100%;display:flex;flex-direction:column;max-width:480px;margin:0 auto;position:relative;background:var(--bg)}
+.screen{display:none;flex-direction:column;height:100%;overflow:hidden}
+.screen.active{display:flex;animation:fi .2s ease}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.bar{background:var(--f0);color:#fff;padding:calc(var(--safe-top) + 10px) 14px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.bar-t{font-size:17px;font-weight:600;letter-spacing:.01em}
+.bar-s{font-size:12px;opacity:.82;margin-top:1px}
+.bl{display:flex;align-items:center;gap:4px}
+.bk{background:none;border:none;color:#fff;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:8px;flex-shrink:0}
+.bk:active{background:rgba(255,255,255,.2)}
+.bk svg{width:11px;height:18px}
+.bb{background:none;border:none;color:#fff;font-size:13px;font-weight:600;padding:6px 10px;border-radius:6px;cursor:pointer}
+.bb:active{background:rgba(255,255,255,.2)}
+
+.scroll{flex:1;overflow-y:auto;padding:14px;-webkit-overflow-scrolling:touch}
+.foot{padding:12px 14px calc(var(--safe-bot) + 12px);background:var(--bg);border-top:.5px solid var(--border);flex-shrink:0}
+
+.btn{display:block;width:100%;padding:14px;border-radius:var(--r);font-size:15px;font-weight:600;cursor:pointer;text-align:center;transition:all .15s;border:none;-webkit-appearance:none}
+.bp{background:var(--f0);color:#fff}.bp:active{background:var(--f0d)}.bp:disabled{background:#b0c8f0;cursor:not-allowed}
+.bo{background:var(--card);color:var(--f0);border:1.5px solid var(--f0);margin-bottom:10px}.bo:active{background:var(--bbg)}
+.bg{background:var(--card);color:var(--txt2);border:.5px solid var(--border)}.bg:active{background:var(--bg)}
+
+.card{background:var(--card);border-radius:var(--rm);border:.5px solid var(--border);padding:16px;margin-bottom:12px}
+.chip{display:inline-flex;align-items:center;border-radius:20px;padding:4px 10px;font-size:12px;font-weight:600;line-height:1.4}
+.cg{background:var(--gbg);border:.5px solid var(--gborder);color:var(--green)}
+.cb{background:var(--bbg);border:.5px solid var(--bbd);color:var(--bbt)}
+.ca{background:var(--abg);border:.5px solid var(--aborder);color:var(--amber)}
+.cx{background:#f0f0f0;border:.5px solid #ddd;color:var(--txt3)}
+.sec{font-size:11px;font-weight:700;color:var(--txt3);letter-spacing:.09em;text-transform:uppercase;margin:16px 0 8px}
+.kv{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:.5px solid var(--sep)}
+.kv:last-child{border-bottom:none}
+.kk{font-size:13px;color:var(--txt2)}
+.kv-v{font-size:13px;font-weight:600;color:var(--txt)}
+.notice{border-left:3px solid var(--amber);background:var(--abg);padding:10px 13px;font-size:13px;color:var(--amber);margin-bottom:12px;border-radius:0 6px 6px 0}
+.notice b{font-weight:700}
+.ng{border-left-color:var(--green);background:var(--gbg);color:var(--green)}
+.nb{border-left-color:var(--f0);background:var(--bbg);color:var(--bbt)}
+
+/* Auth */
+.auth-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;overflow-y:auto}
+.alo{width:60px;height:60px;background:var(--f0);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+.alo svg{width:32px;height:32px;fill:#fff}
+.ah{font-size:22px;font-weight:700;text-align:center;margin-bottom:8px;color:var(--txt)}
+.as{font-size:14px;color:var(--txt2);text-align:center;margin-bottom:26px;line-height:1.5}
+.al{font-size:11px;font-weight:700;color:var(--txt3);letter-spacing:.09em;text-transform:uppercase;text-align:center;margin-bottom:18px}
+.af{margin-bottom:14px;width:100%}
+.af label{font-size:13px;font-weight:500;color:var(--txt2);display:block;margin-bottom:5px}
+.af input{width:100%;height:48px;border:1.5px solid var(--border);border-radius:var(--r);padding:0 14px;font-size:16px;color:var(--txt);background:var(--card);outline:none;-webkit-appearance:none}
+.af input:focus{border-color:var(--f0)}
+.smsb{background:var(--bbg);border-radius:var(--r);padding:12px 16px;font-size:13px;color:var(--bbt);font-weight:500;text-align:center;margin-bottom:20px;width:100%}
+.otp-row{display:flex;gap:12px;justify-content:center;margin-bottom:26px}
+.otpb{width:52px;height:60px;border:1.5px solid var(--border);border-radius:var(--r);font-size:26px;font-weight:700;text-align:center;color:var(--txt);background:var(--card);outline:none;-webkit-appearance:none}
+.otpb:focus{border-color:var(--f0)}
+
+/* PIN */
+.pw{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+.pdots{display:flex;gap:16px;margin-bottom:30px}
+.pdot{width:16px;height:16px;border-radius:50%;border:2px solid var(--border);background:transparent;transition:all .15s}
+.pdot.on{background:var(--f0);border-color:var(--f0)}
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:260px}
+.pk{height:60px;border-radius:var(--r);border:.5px solid var(--border);background:var(--card);font-size:22px;font-weight:600;color:var(--txt);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .1s}
+.pk:active{background:var(--bbg);border-color:var(--f0)}
+
+/* Stop timeline */
+.tl{position:relative;padding-left:28px}
+.tl::before{content:'';position:absolute;left:9px;top:14px;bottom:14px;width:2px;background:var(--border)}
+.tli{position:relative;margin-bottom:10px}
+.tld{position:absolute;left:-21px;top:16px;width:16px;height:16px;border-radius:50%;background:var(--card);border:2.5px solid var(--border);z-index:1}
+.tld.dn{border-color:var(--green);background:var(--green)}
+.tld.cr{border-color:var(--f0);background:var(--f0)}
+.sc{background:var(--card);border-radius:var(--r);border:.5px solid var(--border);padding:14px;transition:all .15s}
+.sc.cr{border:1.5px solid var(--f0);background:var(--bbg)}
+.sc.dn{opacity:.72}
+.sn{font-size:11px;color:var(--txt3);font-weight:600;margin-bottom:3px}
+.snm{font-size:15px;font-weight:700;color:var(--txt);margin-bottom:4px}
+.sad{font-size:12px;color:var(--txt2);margin-bottom:10px}
+.stm{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.tb{background:var(--bg);border-radius:6px;padding:7px 9px}
+.tbl{font-size:11px;color:var(--txt3);font-weight:500;margin-bottom:2px}
+.tbv{font-size:13px;font-weight:600;color:var(--txt)}
+.sf{display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:.5px solid var(--sep)}
+.lnk{background:none;border:none;font-size:13px;color:var(--f0);font-weight:600;cursor:pointer;padding:4px 0}
+
+/* Progress */
+.prog{display:flex;align-items:center;margin-bottom:0}
+.ps{flex:1;text-align:center;position:relative}
+.ps::after{content:'';position:absolute;top:12px;left:50%;right:-50%;height:2px;background:var(--border)}
+.ps:last-child::after{display:none}
+.ps.dn::after{background:var(--green)}
+.pdw{position:relative;z-index:1;display:flex;justify-content:center;margin-bottom:4px}
+.pd2{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--txt3)}
+.ps.dn .pd2{background:var(--green);border-color:var(--green);color:#fff}
+.ps.ac .pd2{background:var(--f0);border-color:var(--f0);color:#fff}
+.psl{font-size:10px;color:var(--txt3);font-weight:500}
+.ps.dn .psl{color:var(--green)}
+.ps.ac .psl{color:var(--f0);font-weight:700}
+
+/* Cargo table */
+.ct{background:var(--card);border-radius:var(--r);border:.5px solid var(--border);overflow:hidden;margin-bottom:12px}
+.cth{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:8px 13px;background:#f0f4f8;border-bottom:.5px solid var(--border)}
+.cthc{font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.05em}
+.ctr{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:11px 13px;border-bottom:.5px solid var(--sep);cursor:pointer}
+.ctr:last-child{border-bottom:none}
+.ctr:active{background:#f0f5ff}
+.ctc{font-size:13px;color:var(--txt)}
+.ctc.b{font-weight:600}
+.haz{display:inline-block;background:#fff3e0;border:.5px solid #f5c060;color:#7a4000;font-size:10px;font-weight:700;border-radius:4px;padding:1px 5px;margin-left:3px;vertical-align:middle}
+
+/* POD tabs */
+.tabs{display:flex;background:var(--card);border:.5px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:14px}
+.tab{flex:1;padding:10px 4px;font-size:12px;font-weight:600;text-align:center;color:var(--txt3);cursor:pointer;border-right:.5px solid var(--border)}
+.tab:last-child{border-right:none}
+.tab.dn{background:var(--gbg);color:var(--green)}
+.tab.dn::after{content:' ✓'}
+.tab.ac{background:var(--bbg);color:var(--bbt)}
+
+/* Signature */
+.sigw{background:#fafafa;border:1.5px dashed var(--border);border-radius:var(--r);margin-bottom:12px;position:relative;overflow:hidden}
+.sigw.signed{border-style:solid;border-color:var(--f0)}
+.sigh{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:14px;color:var(--txt3);pointer-events:none;text-align:center}
+.sigc{display:block;width:100%;height:200px;cursor:crosshair;touch-action:none}
+.penr{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+.penb{border-radius:50%;border:1.5px solid var(--border);background:var(--card);cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center}
+.penb.sel{border-color:var(--f0);background:var(--bbg)}
+.penb:active{background:var(--bbg)}
+.clrb{margin-left:auto;background:var(--card);border:.5px solid var(--border);border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;color:var(--txt2);cursor:pointer}
+.clrb:active{border-color:var(--f0);color:var(--f0)}
+
+/* Photos */
+.pgr{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.pth{position:relative;border-radius:var(--r);overflow:hidden;background:var(--bg);border:.5px solid var(--border);aspect-ratio:1}
+.pth img{width:100%;height:100%;object-fit:cover;display:block}
+.pdl{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;background:rgba(165,0,0,.88);border:none;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+.pad{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border:1.5px dashed var(--border);border-radius:var(--r);aspect-ratio:1;cursor:pointer;background:var(--card)}
+.pad:active{border-color:var(--f0);background:var(--bbg)}
+.pad svg{width:26px;height:26px;fill:var(--txt3)}
+.pad span{font-size:12px;color:var(--txt3);font-weight:600}
+
+/* Camera */
+.camv{background:#111;border-radius:var(--r);overflow:hidden;margin-bottom:12px;position:relative}
+.camc{display:block;width:100%;aspect-ratio:4/3;background:#1a1a1a}
+.camo{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:12px}
+.camrow{display:flex;gap:12px;align-items:center;justify-content:center}
+.sht{width:64px;height:64px;border-radius:50%;background:#fff;border:4px solid rgba(255,255,255,.45);cursor:pointer;flex-shrink:0}
+.sht:active{transform:scale(.9)}
+.camb{background:rgba(0,0,0,.55);border:none;color:#fff;font-size:13px;font-weight:600;padding:9px 16px;border-radius:20px;cursor:pointer}
+.caml{position:absolute;top:10px;left:0;right:0;text-align:center;font-size:11px;font-weight:700;color:#fff;letter-spacing:.06em;opacity:.75}
+.cor{position:absolute;width:24px;height:24px;border-color:#fff;border-style:solid;opacity:.55}
+.cor.tl{top:16px;left:16px;border-width:2px 0 0 2px;border-radius:2px 0 0 0}
+.cor.tr{top:16px;right:16px;border-width:2px 2px 0 0;border-radius:0 2px 0 0}
+.cor.bl{bottom:88px;left:16px;border-width:0 0 2px 2px;border-radius:0 0 0 2px}
+.cor.br{bottom:88px;right:16px;border-width:0 2px 2px 0;border-radius:0 0 2px 0}
+.rinp{width:100%;border:1.5px solid var(--border);border-radius:var(--r);padding:12px 14px;font-size:16px;font-weight:600;color:var(--txt);background:var(--card);outline:none;-webkit-appearance:none;margin-top:5px}
+.rinp:focus{border-color:var(--f0)}
+.condr{display:flex;gap:8px;flex-wrap:wrap}
+.condb{border-radius:20px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--txt2)}
+.condb:active{background:var(--gbg)}
+.condb.sel{border-color:var(--green);border-width:1.5px;background:var(--gbg);color:var(--green)}
+
+/* Success */
+.suw{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 20px;text-align:center;overflow-y:auto}
+.sui{width:72px;height:72px;border-radius:50%;background:var(--gbg);border:2px solid var(--gborder);display:flex;align-items:center;justify-content:center;margin-bottom:20px;flex-shrink:0}
+.sui svg{width:36px;height:36px;fill:var(--green)}
+.suh{font-size:20px;font-weight:700;color:var(--txt);margin-bottom:8px}
+.sus{font-size:14px;color:var(--txt2);line-height:1.6;margin-bottom:22px}
+.podref{background:var(--gbg);border:.5px solid var(--gborder);border-radius:var(--r);padding:10px 20px;font-size:14px;font-weight:700;color:var(--green);margin-bottom:22px;font-family:monospace;letter-spacing:.04em}
+.nxt-box{background:var(--bbg);border:1.5px solid var(--bbd);border-radius:var(--rm);padding:16px;width:100%;margin-bottom:16px;text-align:left}
+.nxt-lbl{font-size:11px;font-weight:700;color:var(--bbt);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px}
+.nxt-name{font-size:16px;font-weight:700;color:var(--txt);margin-bottom:3px}
+.nxt-addr{font-size:13px;color:var(--txt2);margin-bottom:10px}
+.nxt-meta{display:flex;gap:14px}
+.nxt-mi{flex:1}
+.nxt-ml{font-size:11px;color:var(--txt3)}
+.nxt-mv{font-size:13px;font-weight:700;color:var(--txt)}
+.alldone{background:var(--gbg);border:1.5px solid var(--gborder);border-radius:var(--rm);padding:16px;width:100%;margin-bottom:16px;text-align:center}
+.adi{width:48px;height:48px;border-radius:50%;background:#fff;border:1.5px solid var(--gborder);display:flex;align-items:center;justify-content:center;margin:0 auto 10px}
+.adi svg{width:24px;height:24px;fill:var(--green)}
+.adt{font-size:15px;font-weight:700;color:var(--green);margin-bottom:4px}
+.ads{font-size:13px;color:var(--txt2);line-height:1.5}
+
+/* FO list */
+.foi{background:var(--card);border-radius:var(--rm);border:.5px solid var(--border);padding:16px;margin-bottom:12px;cursor:pointer}
+.foi:active{border-color:#a8c8f0}
+.foi.act{border:1.5px solid var(--f0)}
+.foi.done{border-color:var(--gborder);background:var(--gbg)}
+.fom{display:flex;gap:14px;margin-top:12px;padding-top:12px;border-top:.5px solid var(--sep)}
+.fomi{flex:1}
+.foml{font-size:11px;color:var(--txt3)}
+.fomv{font-size:13px;font-weight:700;color:var(--txt)}
+
+/* Notif */
+.np{background:var(--card);border-radius:var(--rm);border:.5px solid var(--border);overflow:hidden;margin-bottom:12px}
+.nh{background:#f0f4f8;padding:11px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:.5px solid var(--border)}
+.nht{font-size:12px;font-weight:700;color:var(--txt2);letter-spacing:.06em;text-transform:uppercase}
+.nbdg{background:var(--f0);color:#fff;font-size:11px;font-weight:700;border-radius:10px;padding:2px 8px}
+.ni{padding:13px 14px;border-bottom:.5px solid var(--sep);display:flex;gap:11px;align-items:flex-start}
+.ni:last-child{border-bottom:none}
+.ni.unr{background:#f5f9ff}
+.nic{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.nic svg{width:18px;height:18px}
+.nib{flex:1}
+.nit{font-size:13px;font-weight:700;color:var(--txt);margin-bottom:3px}
+.nim{font-size:13px;color:var(--txt2);line-height:1.45}
+.nitm{font-size:11px;color:var(--txt3);margin-top:4px}
+.undot{width:8px;height:8px;border-radius:50%;background:var(--f0);flex-shrink:0;margin-top:5px}
+
+/* Install banner */
+.install-banner{background:var(--f0);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.install-banner.hidden{display:none}
+.ib-text{flex:1;font-size:13px;line-height:1.4}
+.ib-text b{font-weight:700;display:block;margin-bottom:2px}
+.ib-dismiss{background:rgba(255,255,255,.2);border:none;color:#fff;font-size:13px;font-weight:600;padding:8px 14px;border-radius:8px;cursor:pointer;flex-shrink:0}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- iOS Install Banner -->
+<div class="install-banner" id="install-banner">
+  <div class="ib-text"><b>Install on your iPhone</b>Tap Share → "Add to Home Screen"</div>
+  <button class="ib-dismiss" onclick="document.getElementById('install-banner').classList.add('hidden');localStorage.setItem('ib','1')">Got it</button>
+</div>
+
+<!-- SCREEN: Login -->
+<div class="screen active" id="sc-login">
+  <div class="bar"><div><div class="bar-t">SAP TM Driver</div></div></div>
+  <div class="auth-wrap">
+    <div class="alo"><svg viewBox="0 0 24 24"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm-9 13H4v-2h7v2zm9 0h-7v-2h7v2zm0-5H4V8h16v4z"/></svg></div>
+    <div class="ah">Welcome</div>
+    <div class="as">Enter your mobile number to receive a verification code</div>
+    <div class="af"><label>Mobile number</label><input type="tel" value="+49 172 555 8821" id="phone-in" autocomplete="tel"></div>
+    <button class="btn bp" style="width:100%;margin-bottom:12px" onclick="go('sc-otp')">Send verification code</button>
+    <div style="font-size:12px;color:var(--txt3);text-align:center">Standard SMS rates may apply</div>
+  </div>
+</div>
+
+<!-- SCREEN: OTP -->
+<div class="screen" id="sc-otp">
+  <div class="bar"><div class="bl"><button class="bk" onclick="go('sc-login')"><svg viewBox="0 0 10 16" fill="none"><path d="M8.5 1.5L2 8l6.5 6.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div><div class="bar-t">Verify identity</div><div class="bar-s">Step 1 of 2</div></div></div></div>
+  <div class="auth-wrap">
+    <div class="alo"><svg viewBox="0 0 24 24"><path d="M18 8h-1V6A5 5 0 0 0 7 6v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2zM12 17a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm3.1-9H8.9V6a3.1 3.1 0 0 1 6.2 0v2z"/></svg></div>
+    <div class="al">SMS verification</div>
+    <div class="smsb">Code sent to +49 172 *** 8821</div>
+    <div class="otp-row">
+      <input class="otpb" maxlength="1" type="tel" inputmode="numeric" oninput="otn(this,'o2')" id="o1">
+      <input class="otpb" maxlength="1" type="tel" inputmode="numeric" oninput="otn(this,'o3')" id="o2">
+      <input class="otpb" maxlength="1" type="tel" inputmode="numeric" oninput="otn(this,'o4')" id="o3">
+      <input class="otpb" maxlength="1" type="tel" inputmode="numeric" id="o4">
+    </div>
+    <button class="btn bp" style="width:100%;margin-bottom:12px" onclick="go('sc-pin')">Verify code</button>
+    <div style="font-size:13px;color:var(--txt3);text-align:center">Didn't receive it? <span style="color:var(--f0);font-weight:600" onclick="alert('Code resent!')">Resend</span></div>
+  </div>
+</div>
+
+<!-- SCREEN: PIN -->
+<div class="screen" id="sc-pin">
+  <div class="bar"><div class="bl"><button class="bk" onclick="go('sc-otp')"><svg viewBox="0 0 10 16" fill="none"><path d="M8.5 1.5L2 8l6.5 6.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div><div class="bar-t">Set your PIN</div><div class="bar-s">Step 2 of 2</div></div></div></div>
+  <div class="pw">
+    <div class="al">Create a 4-digit PIN</div>
+    <div class="as" style="margin-bottom:22px">You'll use this to log in quickly next time</div>
+    <div class="pdots" id="pdots"><div class="pdot" id="d0"></div><div class="pdot" id="d1"></div><div class="pdot" id="d2"></div><div class="pdot" id="d3"></div></div>
+    <div class="pgrid">
+      <button class="pk" onclick="pp(1)">1</button><button class="pk" onclick="pp(2)">2</button><button class="pk" onclick="pp(3)">3</button>
+      <button class="pk" onclick="pp(4)">4</button><button class="pk" onclick="pp(5)">5</button><button class="pk" onclick="pp(6)">6</button>
+      <button class="pk" onclick="pp(7)">7</button><button class="pk" onclick="pp(8)">8</button><button class="pk" onclick="pp(9)">9</button>
+      <div></div><button class="pk" onclick="pp(0)">0</button><button class="pk" onclick="ppd()" style="font-size:16px">⌫</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN: FO List -->
+<div class="screen" id="sc-folist">
+  <div class="bar"><div><div class="bar-t">My assignments</div><div class="bar-s">Klaus Mueller · DRV-DE-00442</div></div><button class="bb" onclick="resetAll();go('sc-login')">Log out</button></div>
+  <div class="scroll" id="folist-body"></div>
+</div>
+
+<!-- SCREEN: FO Detail -->
+<div class="screen" id="sc-fo">
+  <div class="bar"><div class="bl"><button class="bk" onclick="go('sc-folist')"><svg viewBox="0 0 10 16" fill="none"><path d="M8.5 1.5L2 8l6.5 6.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div><div class="bar-t">FO-2026-04187</div><div class="bar-s">Road freight · 4 stops</div></div></div></div>
+  <div class="scroll" id="fo-body"></div>
+  <div class="foot" id="fo-foot"></div>
+</div>
+
+<!-- SCREEN: Cargo -->
+<div class="screen" id="sc-cargo">
+  <div class="bar"><div class="bl"><button class="bk" onclick="go('sc-fo')"><svg viewBox="0 0 10 16" fill="none"><path d="M8.5 1.5L2 8l6.5 6.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div><div class="bar-t" id="cargo-t">Cargo</div><div class="bar-s" id="cargo-s"></div></div></div></div>
+  <div class="scroll" id="cargo-body"></div>
+</div>
+
+<!-- SCREEN: Pallet -->
+<div class="screen" id="sc-pallet">
+  <div class="bar"><div class="bl"><button class="bk" onclick="go('sc-cargo')"><svg viewBox="0 0 10 16" fill="none"><path d="M8.5 1.5L2 8l6.5 6.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div><div class="bar-t" id="pal-t">Pallet</div></div></div></div>
+  <div class="scroll" id="pal-body"></div>
+</div>
+
+<!-- SCREEN: POD -->
+<div class="screen" id="sc-pod">
+  <div class="bar"><div class="bl"><button class="bk" onclick="go('sc-fo')"><svg viewBox="0 0 10 16" fill="none"><path d="M8.5 1.5L2 8l6.5 6.5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div><div class="bar-t">Proof of delivery</div><div class="bar-s" id="pod-bar-s"></div></div></div></div>
+  <div class="scroll">
+    <div class="tabs">
+      <div class="tab ac" id="t1" onclick="pt(1)">1. Details</div>
+      <div class="tab" id="t2" onclick="pt(2)">2. Photos</div>
+      <div class="tab" id="t3" onclick="pt(3)">3. Sign</div>
+      <div class="tab" id="t4" onclick="pt(4)">4. Submit</div>
+    </div>
+    <div id="pt1">
+      <div class="card" id="pod-detail-card"></div>
+      <div class="card">
+        <div style="font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:6px">Recipient name</div>
+        <input class="rinp" id="recip" type="text" placeholder="Name of person accepting delivery" autocomplete="name">
+      </div>
+      <div class="card">
+        <div style="font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:10px">Delivery condition</div>
+        <div class="condr" id="cond-row">
+          <button class="condb sel" onclick="setC(this,'Clean — no damage')">Clean — no damage</button>
+          <button class="condb" onclick="setC(this,'Minor damage noted')">Minor damage noted</button>
+          <button class="condb" onclick="setC(this,'Partial delivery')">Partial delivery</button>
+        </div>
+      </div>
+    </div>
+    <div id="pt2" style="display:none">
+      <div style="font-size:14px;color:var(--txt2);margin-bottom:12px;line-height:1.5">Capture photos of delivered goods, unloading area, and any damage.</div>
+      <div class="pgr" id="ph-grid">
+        <div class="pad" onclick="startCam()"><svg viewBox="0 0 24 24"><path d="M12 15.2A3.2 3.2 0 1 0 12 8.8a3.2 3.2 0 0 0 0 6.4zm9-11h-2.78l-1.4-1.68A1 1 0 0 0 16 2H8a1 1 0 0 0-.78.38L5.78 4H3a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm-9 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/></svg><span>Add photo</span></div>
+      </div>
+      <input type="file" accept="image/*" capture="environment" id="ffile" style="position:absolute;width:1px;height:1px;opacity:0" onchange="handleFile(event)">
+      <div id="cam-sec" style="display:none">
+        <div class="camv">
+          <canvas class="camc" id="cc"></canvas>
+          <div class="cor tl"></div><div class="cor tr"></div><div class="cor bl"></div><div class="cor br"></div>
+          <div class="caml">CAMERA</div>
+          <div class="camo"><div class="camrow"><button class="camb" onclick="closeCam()">Cancel</button><button class="sht" onclick="capPh()"></button><button class="camb" onclick="document.getElementById('ffile').click();closeCam()">Gallery</button></div></div>
+        </div>
+      </div>
+      <div id="ph-hint" style="font-size:12px;color:var(--txt3);text-align:center;margin-top:4px">Tap to add — up to 8 photos</div>
+    </div>
+    <div id="pt3" style="display:none">
+      <div style="font-size:14px;color:var(--txt2);margin-bottom:12px;line-height:1.5">Ask the recipient to sign using their finger.</div>
+      <div class="penr">
+        <span style="font-size:12px;color:var(--txt3);margin-right:4px">Pen:</span>
+        <button class="penb sel" id="pb-s" onclick="setPen(2,'pb-s')"><div style="width:3px;height:3px;border-radius:50%;background:var(--txt)"></div></button>
+        <button class="penb" id="pb-m" onclick="setPen(4,'pb-m')"><div style="width:5px;height:5px;border-radius:50%;background:var(--txt)"></div></button>
+        <button class="penb" id="pb-l" onclick="setPen(7,'pb-l')"><div style="width:8px;height:8px;border-radius:50%;background:var(--txt)"></div></button>
+        <button class="clrb" onclick="clearSig()">Clear</button>
+      </div>
+      <div class="sigw" id="sigw">
+        <canvas class="sigc" id="sigc" width="800" height="400"></canvas>
+        <div class="sigh" id="sigh"><svg width="28" height="28" viewBox="0 0 24 24" fill="#c0c0c0" style="display:block;margin:0 auto 6px"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>Sign here</div>
+      </div>
+      <div style="font-size:12px;color:var(--txt3);text-align:center;margin-bottom:6px" id="sig-st">No signature yet</div>
+      <div id="sig-ok" style="display:none;background:var(--gbg);border:.5px solid var(--gborder);border-radius:var(--r);padding:8px 14px;font-size:13px;color:var(--green);font-weight:700;text-align:center;margin-bottom:6px">Signature captured</div>
+    </div>
+    <div id="pt4" style="display:none">
+      <div class="card">
+        <div style="font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:12px">POD summary</div>
+        <div class="kv"><span class="kk">Recipient</span><span class="kv-v" id="sum-r">—</span></div>
+        <div class="kv"><span class="kk">Condition</span><span class="kv-v" id="sum-c">—</span></div>
+        <div class="kv"><span class="kk">Photos</span><span class="kv-v" id="sum-ph">0</span></div>
+        <div class="kv"><span class="kk">Signature</span><span class="kv-v" id="sum-s" style="color:var(--red)">Not captured</span></div>
+        <div class="kv"><span class="kk">Timestamp</span><span class="kv-v" id="sum-ts">—</span></div>
+      </div>
+      <div id="sub-w"></div>
+      <div style="font-size:12px;color:var(--txt3);line-height:1.6;margin-bottom:12px">Submitting sends this POD to SAP TM and notifies your dispatcher.</div>
+    </div>
+  </div>
+  <div class="foot"><button class="btn bp" id="pod-btn" onclick="podNext()">Next — Photos</button></div>
+</div>
+
+<!-- SCREEN: POD Success -->
+<div class="screen" id="sc-podsuc">
+  <div class="bar"><div><div class="bar-t">POD submitted</div></div></div>
+  <div class="suw" id="podsuc-body"></div>
+</div>
+
+</div><!-- /app -->
+
+<script>
+// ── State ─────────────────────────────────────────────────────────
+var PIN=[], sctx=null, sigHas=false, penSz=2;
+var photos=[], cond='Clean — no damage', podTab=1;
+var camAF=null, camPh=0, curStopIdx=1;
+var SAMP=[{l:'Delivery area',c:'#e8f4e8',a:'#4a9a5c'},{l:'Pallet condition',c:'#e8eef8',a:'#4a6a9c'},{l:'Goods close-up',c:'#f8f0e8',a:'#9c7a4a'}];
+
+var STOPS=[
+  {idx:0,label:'Stop 1',role:'Origin',name:'Hamburg Central Warehouse',addr:'Speditionsweg 12, 20457 Hamburg',arr:'06:00 · 14 Mar',dep:'07:15 · 14 Mar',shipId:'SHP-11042',
+    pallets:[
+      {id:'PAL-001',qty:6,con:'Electronic components — PCB boards',wt:'3,600 kg',dim:'120×80×140 cm',tmp:'Ambient',haz:false,ref:'PO-8821-A'},
+      {id:'PAL-002',qty:4,con:'Industrial machinery parts',wt:'2,800 kg',dim:'120×80×160 cm',tmp:'Ambient',haz:false,ref:'PO-8821-B'},
+      {id:'PAL-003',qty:4,con:'Chemical reagents',wt:'1,600 kg',dim:'120×80×100 cm',tmp:'<25°C',haz:true,ref:'PO-8822'}],
+    needsPOD:false,status:'done'},
+  {idx:1,label:'Stop 2',role:'Customer A',name:'Müller GmbH — Goods-in',addr:'Industriestr. 88, 22761 Hamburg',arr:'09:30 · 14 Mar',dep:'10:05 · 14 Mar',shipId:'SHP-11043',
+    pallets:[
+      {id:'PAL-004',qty:6,con:'Automotive spare parts',wt:'1,800 kg',dim:'120×80×120 cm',tmp:'Ambient',haz:false,ref:'PO-9010'},
+      {id:'PAL-005',qty:4,con:'Packaging materials',wt:'900 kg',dim:'120×80×180 cm',tmp:'Dry',haz:false,ref:'PO-9011'}],
+    needsPOD:true,status:'pending'},
+  {idx:2,label:'Stop 3',role:'Customer B',name:'Becker Logistics Park',addr:'Ladestraße 5, 22113 Hamburg-Billbrook',arr:'13:00 · 14 Mar',dep:'14:00 · 14 Mar',shipId:'SHP-11044',
+    pallets:[
+      {id:'PAL-006',qty:8,con:'Consumer electronics — televisions',wt:'4,400 kg',dim:'120×80×200 cm',tmp:'Ambient',haz:false,ref:'PO-7731'},
+      {id:'PAL-007',qty:4,con:'Frozen seafood — Atlantic salmon',wt:'2,000 kg',dim:'120×80×100 cm',tmp:'-18°C frozen',haz:false,ref:'PO-7732'},
+      {id:'PAL-008',qty:2,con:'Lithium-ion battery packs (UN3480)',wt:'600 kg',dim:'100×80×60 cm',tmp:'<30°C',haz:true,ref:'PO-7733'}],
+    needsPOD:true,status:'pending'},
+  {idx:3,label:'Stop 4',role:'Return to depot',name:'Hamburg Depot — HH North',addr:'Depotring 3, 22419 Hamburg',arr:'17:00 · 14 Mar',dep:'17:30 · 14 Mar',shipId:null,pallets:[],needsPOD:false,status:'pending'}
+];
+
+// ── Navigation ────────────────────────────────────────────────────
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  var el=document.getElementById(id); if(!el)return;
+  el.classList.add('active');
+  window.scrollTo(0,0);
+  if(id==='sc-folist') renderFOList();
+  if(id==='sc-fo') renderFO();
+  if(id==='sc-pod') initPOD();
+}
+
+// ── Auth helpers ──────────────────────────────────────────────────
+function otn(el,nid){if(el.value.length===1&&nid)document.getElementById(nid).focus();}
+function pp(n){if(PIN.length>=4)return;PIN.push(n);upd();if(PIN.length===4)setTimeout(()=>go('sc-folist'),350);}
+function ppd(){if(PIN.length>0){PIN.pop();upd();}}
+function upd(){for(var i=0;i<4;i++)document.getElementById('d'+i).classList.toggle('on',i<PIN.length);}
+
+// ── Stop helpers ──────────────────────────────────────────────────
+function nextPODStop(){
+  for(var i=0;i<STOPS.length;i++){if(STOPS[i].needsPOD&&STOPS[i].status==='pending')return STOPS[i];}
+  return null;
+}
+function allDeliveryDone(){return STOPS.filter(s=>s.needsPOD).every(s=>s.status==='done');}
+
+// ── FO List ───────────────────────────────────────────────────────
+function renderFOList(){
+  var done=STOPS.filter(s=>s.needsPOD&&s.status==='done').length;
+  var total=STOPS.filter(s=>s.needsPOD).length;
+  var allDone=allDeliveryDone();
+  var nextPOD=nextPODStop();
+  var h='';
+  if(done>0){
+    if(allDone){
+      h+='<div class="notice ng"><b>All deliveries complete</b> — returning to depot</div>';
+    } else {
+      var justDone=STOPS.filter(s=>s.needsPOD&&s.status==='done').slice(-1)[0];
+      h+='<div class="notice ng"><b>POD submitted</b> — '+justDone.name.split('—')[0].trim()+' confirmed</div>';
+    }
+    h+='<div class="np"><div class="nh"><span class="nht">Dispatcher</span><span class="nbdg">New</span></div>';
+    if(allDone){
+      h+='<div class="ni unr"><div class="nic" style="background:var(--gbg)"><svg viewBox="0 0 24 24" fill="var(--green)"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div><div class="nib"><div class="nit">All PODs confirmed — great work!</div><div class="nim">All deliveries done. Please return to Hamburg Depot — HH North.</div><div class="nitm">Just now</div></div><div class="undot"></div></div>';
+    } else {
+      var jd=STOPS.filter(s=>s.needsPOD&&s.status==='done').slice(-1)[0];
+      h+='<div class="ni unr"><div class="nic" style="background:var(--gbg)"><svg viewBox="0 0 24 24" fill="var(--green)"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div><div class="nib"><div class="nit">POD acknowledged — '+jd.name.split('—')[0].trim()+'</div><div class="nim">Hans Dieter confirmed receipt. Stop marked complete in SAP TM.</div><div class="nitm">Just now</div></div><div class="undot"></div></div>';
+      if(nextPOD)h+='<div class="ni unr"><div class="nic" style="background:var(--bbg)"><svg viewBox="0 0 24 24" fill="var(--f0)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg></div><div class="nib"><div class="nit">Proceed to next stop</div><div class="nim">Navigate to '+nextPOD.name+'. Planned arrival '+nextPOD.arr.split('·')[0].trim()+'.</div><div class="nitm">Just now</div></div><div class="undot"></div></div>';
+    }
+    h+='</div>';
+  }
+  h+='<div class="sec">Active</div>';
+  h+='<div class="foi act" onclick="go(\'sc-fo\')">';
+  h+='<div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="font-size:11px;color:var(--txt3);font-weight:700;letter-spacing:.05em;margin-bottom:3px">FREIGHT ORDER</div><div style="font-size:16px;font-weight:700;margin-bottom:5px">FO-2026-04187</div><div style="font-size:13px;color:var(--txt2)">'+(allDone?'All delivered — returning to depot':'In transit')+'</div></div>'+(allDone?'<span class="chip cg">Complete</span>':'<span class="chip cb">In transit</span>')+'</div>';
+  h+='<div class="fom"><div class="fomi"><div class="foml">POD done</div><div class="fomv" style="color:var(--green)">'+done+'/'+total+'</div></div><div class="fomi"><div class="foml">Distance</div><div class="fomv">412 km</div></div><div class="fomi"><div class="foml">End</div><div class="fomv">17:30</div></div><div style="display:flex;align-items:flex-end"><span style="font-size:13px;color:var(--f0);font-weight:700">Open ›</span></div></div></div>';
+  h+='<div class="sec">Upcoming</div>';
+  h+='<div class="foi" style="opacity:.65"><div style="font-size:11px;color:var(--txt3);font-weight:700;letter-spacing:.05em;margin-bottom:3px">FREIGHT ORDER</div><div style="font-size:16px;font-weight:700;margin-bottom:3px">FO-2026-04201</div><div style="font-size:13px;color:var(--txt2)">15 Mar 2026 · 07:00 — Scheduled</div></div>';
+  document.getElementById('folist-body').innerHTML=h;
+}
+
+// ── FO Detail ─────────────────────────────────────────────────────
+function renderFO(){
+  var done=STOPS.filter(s=>s.needsPOD&&s.status==='done').length;
+  var total=STOPS.filter(s=>s.needsPOD).length;
+  var allDone=allDeliveryDone();
+  var nextPOD=nextPODStop();
+  var h='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">';
+  h+='<div class="card" style="margin-bottom:0;padding:12px"><div style="font-size:12px;color:var(--txt3)">Distance</div><div style="font-size:16px;font-weight:700">412 km</div></div>';
+  h+='<div class="card" style="margin-bottom:0;padding:12px"><div style="font-size:12px;color:var(--txt3)">POD progress</div><div style="font-size:16px;font-weight:700;color:var(--green)">'+done+'/'+total+'</div></div>';
+  h+='<div class="card" style="margin-bottom:0;padding:12px"><div style="font-size:12px;color:var(--txt3)">Gross weight</div><div style="font-size:16px;font-weight:700">14,400 kg</div></div>';
+  h+='<div class="card" style="margin-bottom:0;padding:12px"><div style="font-size:12px;color:var(--txt3)">Vehicle</div><div style="font-size:16px;font-weight:700">HH-TM 4419</div></div></div>';
+  var steps=[{l:'Loaded',dn:true,ac:false},{l:'Departed',dn:true,ac:false},{l:'En route',dn:false,ac:!allDone},{l:'Delivered',dn:allDone,ac:false},{l:'Return',dn:false,ac:allDone}];
+  h+='<div class="card"><div class="prog">';
+  steps.forEach(function(s,i){h+='<div class="ps'+(s.dn?' dn':s.ac?' ac':'')+'"><div class="pdw"><div class="pd2">'+(s.dn?'✓':(i+1))+'</div></div><div class="psl">'+s.l+'</div></div>';});
+  h+='</div></div>';
+  h+='<div class="sec">Route &amp; stops</div><div class="tl">';
+  STOPS.forEach(function(s){
+    var dc=s.status==='done'?' dn':nextPOD&&nextPOD.idx===s.idx?' cr':'';
+    var cc=s.status==='done'?' dn':nextPOD&&nextPOD.idx===s.idx?' cr':'';
+    var isNext=nextPOD&&nextPOD.idx===s.idx;
+    var isDest=allDone&&s.idx===3;
+    var badge=isNext?'&nbsp;<span style="background:var(--bbg);color:var(--bbt);font-size:11px;font-weight:700;border-radius:4px;padding:2px 7px">Next</span>':isDest?'&nbsp;<span style="background:var(--bbg);color:var(--bbt);font-size:11px;font-weight:700;border-radius:4px;padding:2px 7px">Return here</span>':'';
+    var chip=s.status==='done'?'<span class="chip cg">'+(s.idx===0?'Departed':'Delivered')+'</span>':isNext||isDest?'<span class="chip cb">En route</span>':'<span class="chip cx">Pending</span>';
+    h+='<div class="tli"><div class="tld'+dc+'"></div><div class="sc'+cc+'">';
+    h+='<div class="sn">'+s.label+' — '+s.role+'</div>';
+    h+='<div class="snm">'+s.name+badge+'</div>';
+    h+='<div class="sad">'+s.addr+'</div>';
+    h+='<div class="stm"><div class="tb"><div class="tbl">Planned arrival</div><div class="tbv">'+s.arr+'</div></div><div class="tb"><div class="tbl">Planned dep.</div><div class="tbv">'+s.dep+'</div></div></div>';
+    h+='<div class="sf">'+chip;
+    if(s.pallets.length>0)h+='<button class="lnk" onclick="showCargo('+s.idx+')">Cargo ›</button>';
+    else h+='<span></span>';
+    h+='</div></div></div>';
+  });
+  h+='</div>';
+  document.getElementById('fo-body').innerHTML=h;
+  var foot='';
+  if(nextPOD){
+    foot='<button class="btn bp" onclick="startPOD('+nextPOD.idx+')">Start POD — '+nextPOD.label+' ('+nextPOD.role+')</button>';
+  } else if(allDone){
+    foot='<button class="btn bp" onclick="completeDepotReturn()">Confirm depot arrival</button>';
+  }
+  document.getElementById('fo-foot').innerHTML=foot;
+}
+
+// ── Cargo ─────────────────────────────────────────────────────────
+var lastCargoIdx=0;
+function showCargo(idx){
+  lastCargoIdx=idx;
+  var s=STOPS[idx];
+  document.getElementById('cargo-t').textContent='Cargo — '+(s.shipId||'');
+  document.getElementById('cargo-s').textContent=s.shipId+' · '+s.pallets.reduce((a,p)=>a+p.qty,0)+' pallets';
+  var h='<div class="ct"><div class="cth"><div class="cthc">Item</div><div class="cthc">Qty</div><div class="cthc">Weight</div><div class="cthc">Temp</div></div>';
+  s.pallets.forEach(function(p){
+    h+='<div class="ctr" onclick="showPallet('+idx+',\''+p.id+'\')"><div class="ctc b">'+p.id+(p.haz?'<span class="haz">ADR</span>':'')+'<br><span style="font-size:12px;color:var(--txt2);font-weight:400">'+p.con.substring(0,30)+'…</span></div><div class="ctc">'+p.qty+'</div><div class="ctc">'+p.wt+'</div><div class="ctc">'+(p.tmp.includes('-')||p.tmp.includes('<')?'<span style="color:var(--f0);font-weight:600;font-size:12px">'+p.tmp+'</span>':p.tmp)+'</div></div>';
+  });
+  h+='</div>';
+  document.getElementById('cargo-body').innerHTML=h;
+  go('sc-cargo');
+}
+
+function showPallet(sidx,pid){
+  var s=STOPS[sidx]; var p=s.pallets.find(x=>x.id===pid); if(!p)return;
+  document.getElementById('pal-t').textContent=p.id;
+  var vc=p.tmp.includes('-')||p.tmp.includes('<')?'color:var(--f0)':'';
+  var hc=p.haz?'color:var(--amber)':'';
+  var notes=p.haz?'Handle with care — Lithium battery packs. Keep upright. No direct sunlight. Carry SDS document.':p.tmp.includes('-18')?'Maintain cold chain throughout. Check reefer temperature before and after loading.':'Standard stacking rules apply. Max 2 layers.';
+  var rows=[[p.con,'Content'],[p.qty+' EUR pallets','Count'],[p.wt,'Gross weight'],[p.dim,'Dimensions'],[p.tmp,'Temp. req.'],[p.ref,'PO ref.'],[p.haz?'Yes — UN3480':'No','Hazmat/ADR']];
+  var h='<div class="card">';
+  h+='<div style="display:flex;justify-content:space-between;margin-bottom:14px;padding-bottom:12px;border-bottom:.5px solid var(--sep)"><span style="font-size:15px;font-weight:700">'+p.id+'</span><span class="chip cb">'+p.qty+' pallets</span></div>';
+  rows.forEach(function(r){
+    var vs=r[1]==='Temp. req.'?'style="'+vc+'"':r[1]==='Hazmat/ADR'&&p.haz?'style="'+hc+'"':'';
+    h+='<div class="kv"><span class="kk">'+r[1]+'</span><span class="kv-v" '+vs+'>'+r[0]+'</span></div>';
+  });
+  h+='</div>';
+  h+='<div class="card"><div class="sec" style="margin-top:0">Handling notes</div><div style="font-size:14px;color:var(--txt2);line-height:1.6">'+notes+'</div></div>';
+  document.getElementById('pal-body').innerHTML=h;
+  go('sc-pallet');
+}
+
+// ── POD ───────────────────────────────────────────────────────────
+function startPOD(idx){
+  curStopIdx=idx; photos=[]; cond='Clean — no damage'; sigHas=false; penSz=2;
+  document.getElementById('recip').value='';
+  document.querySelectorAll('.condb').forEach(b=>b.className='condb');
+  document.querySelector('.condb').className='condb sel';
+  renderPhotos(); pt(1); go('sc-pod');
+}
+
+function initPOD(){
+  var s=STOPS[curStopIdx];
+  document.getElementById('pod-bar-s').textContent=(s.shipId||'')+' · '+s.label;
+  var h='<div class="kv"><span class="kk">Freight order</span><span class="kv-v">FO-2026-04187</span></div>';
+  h+='<div class="kv"><span class="kk">Shipment</span><span class="kv-v" style="color:var(--f0)">'+s.shipId+'</span></div>';
+  h+='<div class="kv"><span class="kk">Delivery point</span><span class="kv-v">'+s.name+'</span></div>';
+  h+='<div class="kv"><span class="kk">Pallets</span><span class="kv-v">'+s.pallets.reduce((a,p)=>a+p.qty,0)+' pallets</span></div>';
+  h+='<div class="kv"><span class="kk">Driver</span><span class="kv-v">Klaus Mueller</span></div>';
+  document.getElementById('pod-detail-card').innerHTML=h;
+  setTimeout(initSig,250);
+}
+
+function pt(n){
+  podTab=n;
+  ['pt1','pt2','pt3','pt4'].forEach((id,i)=>document.getElementById(id).style.display=i===n-1?'block':'none');
+  ['t1','t2','t3','t4'].forEach((id,i)=>{document.getElementById(id).className='tab'+(i<n-1?' dn':i===n-1?' ac':'');});
+  document.getElementById('pod-btn').textContent=['Next — Photos','Next — Signature','Next — Review','Submit POD'][n-1];
+  if(n===4)updateSum();
+}
+
+function podNext(){
+  if(podTab===1){
+    var r=document.getElementById('recip').value.trim();
+    if(!r){document.getElementById('recip').focus();document.getElementById('recip').style.borderColor='var(--red)';return;}
+    document.getElementById('recip').style.borderColor='var(--border)'; pt(2);
+  } else if(podTab===2){pt(3);}
+  else if(podTab===3){
+    if(!sigHas){document.getElementById('sigw').style.borderColor='var(--red)';document.getElementById('sig-st').textContent='Signature required';document.getElementById('sig-st').style.color='var(--red)';return;}
+    pt(4);
+  } else if(podTab===4){submitPOD();}
+}
+
+function submitPOD(){
+  var r=document.getElementById('recip').value.trim(); if(!r||!sigHas)return;
+  STOPS[curStopIdx].status='done';
+  var s=STOPS[curStopIdx];
+  var podNum='POD-2026-'+s.shipId.replace('SHP-','')+'-0'+s.idx;
+  var now=new Date();
+  var ts=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')+' · '+now.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  var nextPOD=nextPODStop();
+  var allDone=allDeliveryDone();
+  var h='<div class="sui"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>';
+  h+='<div class="suh">POD submitted</div>';
+  h+='<div class="sus">'+s.name+' confirmed at '+ts+'.<br>Dispatcher has been notified.</div>';
+  h+='<div class="podref">'+podNum+'</div>';
+  if(allDone){
+    h+='<div class="alldone"><div class="adi"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div><div class="adt">All deliveries complete!</div><div class="ads">All '+STOPS.filter(x=>x.needsPOD).length+' customer stops are done. Please return to Hamburg Depot — HH North.</div></div>';
+    h+='<div style="width:100%"><button class="btn bp" style="margin-bottom:10px" onclick="go(\'sc-folist\')">Back to assignments</button><button class="btn bg" onclick="go(\'sc-fo\')">View freight order</button></div>';
+  } else {
+    var ns=nextPOD;
+    h+='<div class="nxt-box"><div class="nxt-lbl">Next stop</div><div class="nxt-name">'+ns.name+'</div><div class="nxt-addr">'+ns.addr+'</div><div class="nxt-meta"><div class="nxt-mi"><div class="nxt-ml">Planned arrival</div><div class="nxt-mv">'+ns.arr+'</div></div><div class="nxt-mi"><div class="nxt-ml">Shipment</div><div class="nxt-mv">'+ns.shipId+'</div></div></div></div>';
+    h+='<div style="width:100%"><button class="btn bp" style="margin-bottom:10px" onclick="startPOD('+ns.idx+')">Start POD — '+ns.label+'</button><button class="btn bg" onclick="go(\'sc-fo\')">Back to stops</button></div>';
+  }
+  document.getElementById('podsuc-body').innerHTML=h;
+  go('sc-podsuc');
+}
+
+function completeDepotReturn(){
+  STOPS[3].status='done';
+  var h='<div class="sui"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>';
+  h+='<div class="suh">Freight order complete</div>';
+  h+='<div class="sus">FO-2026-04187 fully completed.<br>All stops finished. Returned to Hamburg Depot.</div>';
+  h+='<div class="podref">FO-2026-04187 · CLOSED</div>';
+  h+='<div style="width:100%"><button class="btn bp" onclick="resetAll();go(\'sc-folist\')">Back to assignments</button></div>';
+  document.getElementById('podsuc-body').innerHTML=h;
+  go('sc-podsuc');
+}
+
+function resetAll(){
+  STOPS.forEach(s=>{if(s.needsPOD)s.status='pending';});
+  STOPS[0].status='done'; STOPS[3].status='pending';
+  PIN=[]; photos=[]; cond='Clean — no damage'; sigHas=false; penSz=2; podTab=1; curStopIdx=1;
+  for(var i=0;i<4;i++){var d=document.getElementById('d'+i);if(d)d.classList.remove('on');}
+}
+
+function setC(btn,v){cond=v;document.querySelectorAll('.condb').forEach(b=>b.className='condb');btn.className='condb sel';}
+
+// ── Signature ─────────────────────────────────────────────────────
+function initSig(){
+  var c=document.getElementById('sigc'); if(!c)return;
+  sctx=c.getContext('2d'); sctx.strokeStyle='#32363a'; sctx.lineWidth=penSz; sctx.lineCap='round'; sctx.lineJoin='round';
+  c.onmousedown=function(e){var p=gp(c,e);sctx.beginPath();sctx.moveTo(p.x,p.y);document.getElementById('sigh').style.display='none';c.onmousemove=function(e2){var q=gp(c,e2);sctx.lineTo(q.x,q.y);sctx.stroke();sigHas=true;updSig();};};
+  c.onmouseup=c.onmouseleave=function(){c.onmousemove=null;if(sigHas)finSig();};
+  c.ontouchstart=function(e){e.preventDefault();var t=e.touches[0];var p=gp(c,t);sctx.beginPath();sctx.moveTo(p.x,p.y);document.getElementById('sigh').style.display='none';};
+  c.ontouchmove=function(e){e.preventDefault();var t=e.touches[0];var p=gp(c,t);sctx.lineTo(p.x,p.y);sctx.stroke();sigHas=true;updSig();};
+  c.ontouchend=function(){if(sigHas)finSig();};
+}
+function gp(c,e){var r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*(c.width/r.width),y:(e.clientY-r.top)*(c.height/r.height)};}
+function updSig(){document.getElementById('sigh').style.display='none';document.getElementById('sigw').classList.add('signed');}
+function finSig(){document.getElementById('sig-st').textContent='Signature captured';document.getElementById('sig-st').style.color='var(--green)';document.getElementById('sig-ok').style.display='block';}
+function clearSig(){if(!sctx)return;sctx.clearRect(0,0,800,400);sigHas=false;sctx.lineWidth=penSz;document.getElementById('sigh').style.display='block';document.getElementById('sigw').classList.remove('signed');document.getElementById('sig-st').textContent='No signature yet';document.getElementById('sig-st').style.color='var(--txt3)';document.getElementById('sig-ok').style.display='none';}
+function setPen(sz,bid){penSz=sz;if(sctx)sctx.lineWidth=sz;document.querySelectorAll('.penb').forEach(b=>b.classList.remove('sel'));document.getElementById(bid).classList.add('sel');}
+
+// ── Camera / Photos ───────────────────────────────────────────────
+function startCam(){
+  document.getElementById('cam-sec').style.display='block';
+  document.getElementById('cam-sec').scrollIntoView({behavior:'smooth',block:'nearest'});
+  animCam();
+}
+function animCam(){
+  var cv=document.getElementById('cc'); if(!cv)return;
+  var cx=cv.getContext('2d');
+  cv.width=cv.offsetWidth*window.devicePixelRatio||cv.offsetWidth;
+  cv.height=(cv.offsetWidth*0.75)*window.devicePixelRatio;
+  camPh++;
+  cx.fillStyle='#1a1a1a'; cx.fillRect(0,0,cv.width,cv.height);
+  var cols=['#2a3a2a','#1e2e3a','#3a2a1a'];
+  for(var i=0;i<6;i++){cx.fillStyle=cols[i%3];cx.fillRect((i%3)*(cv.width/3),Math.floor(i/3)*(cv.height/2),cv.width/3+1,cv.height/2+1);}
+  cx.fillStyle='rgba(255,255,255,.04)';
+  for(var y=0;y<cv.height;y+=3)cx.fillRect(0,y,cv.width,1.5);
+  cx.strokeStyle='rgba(255,255,255,.14)'; cx.lineWidth=1;
+  [[cv.width/3,0,cv.width/3,cv.height],[cv.width*2/3,0,cv.width*2/3,cv.height],[0,cv.height/3,cv.width,cv.height/3],[0,cv.height*2/3,cv.width,cv.height*2/3]].forEach(function(l){cx.beginPath();cx.moveTo(l[0],l[1]);cx.lineTo(l[2],l[3]);cx.stroke();});
+  cx.fillStyle='rgba(255,255,255,'+(0.5+0.07*Math.sin(camPh*.1))+')';
+  cx.beginPath(); cx.arc(cv.width/2,cv.height*.44,13+2*Math.sin(camPh*.08),0,Math.PI*2); cx.fill();
+  camAF=requestAnimationFrame(animCam);
+}
+function closeCam(){if(camAF)cancelAnimationFrame(camAF);camAF=null;document.getElementById('cam-sec').style.display='none';}
+function capPh(){
+  if(photos.length>=8)return;
+  if(camAF)cancelAnimationFrame(camAF); camAF=null;
+  var s=SAMP[photos.length%SAMP.length];
+  var oc=document.createElement('canvas'); oc.width=300; oc.height=300;
+  var ox=oc.getContext('2d');
+  ox.fillStyle=s.c; ox.fillRect(0,0,300,300);
+  ox.fillStyle=s.a; ox.fillRect(20,20,260,180);
+  ox.fillStyle='rgba(255,255,255,.15)'; ox.fillRect(30,30,240,160);
+  ox.fillStyle='rgba(255,255,255,.85)'; ox.font='bold 13px -apple-system'; ox.textAlign='center'; ox.fillText(s.l,150,118);
+  var now=new Date();
+  ox.font='10px -apple-system'; ox.fillStyle='rgba(0,0,0,.45)'; ox.textAlign='left';
+  ox.fillText(now.toLocaleDateString('en-GB')+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0'),8,288);
+  photos.push({u:oc.toDataURL('image/jpeg',.9),l:s.l});
+  renderPhotos(); document.getElementById('cam-sec').style.display='none'; camPh=0;
+}
+function handleFile(e){
+  var f=e.target.files[0]; if(!f||photos.length>=8)return;
+  var r=new FileReader(); r.onload=function(ev){photos.push({u:ev.target.result,l:'Photo '+(photos.length+1)});renderPhotos();};
+  r.readAsDataURL(f); e.target.value='';
+}
+function renderPhotos(){
+  var g=document.getElementById('ph-grid'); if(!g)return;
+  g.innerHTML='';
+  photos.forEach(function(p,i){
+    var d=document.createElement('div'); d.className='pth';
+    var img=document.createElement('img'); img.src=p.u; img.alt=p.l;
+    var del=document.createElement('button'); del.className='pdl'; del.innerHTML='&times;';
+    del.onclick=function(e){e.stopPropagation();photos.splice(i,1);renderPhotos();};
+    d.appendChild(img); d.appendChild(del); g.appendChild(d);
+  });
+  if(photos.length<8){
+    var a=document.createElement('div'); a.className='pad'; a.onclick=startCam;
+    a.innerHTML='<svg viewBox="0 0 24 24" style="width:26px;height:26px;fill:var(--txt3)"><path d="M12 15.2A3.2 3.2 0 1 0 12 8.8a3.2 3.2 0 0 0 0 6.4zm9-11h-2.78l-1.4-1.68A1 1 0 0 0 16 2H8a1 1 0 0 0-.78.38L5.78 4H3a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm-9 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/></svg><span>Add photo</span>';
+    g.appendChild(a);
+  }
+  var hint=document.getElementById('ph-hint');
+  if(hint)hint.textContent=photos.length>0?photos.length+' photo'+(photos.length>1?'s':'')+' captured (max 8)':'Tap to add — up to 8 photos';
+}
+
+function updateSum(){
+  var r=document.getElementById('recip').value.trim();
+  document.getElementById('sum-r').textContent=r||'—';
+  document.getElementById('sum-c').textContent=cond;
+  document.getElementById('sum-ph').textContent=photos.length+' photo'+(photos.length!==1?'s':'');
+  var ss=document.getElementById('sum-s'); ss.textContent=sigHas?'Collected':'Not captured'; ss.style.color=sigHas?'var(--green)':'var(--red)';
+  var now=new Date();
+  document.getElementById('sum-ts').textContent=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')+' · '+now.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+  var w='';
+  if(!r)w+='<div class="notice" style="margin-bottom:8px"><b>Required:</b> Recipient name.</div>';
+  if(!sigHas)w+='<div class="notice" style="margin-bottom:8px"><b>Required:</b> Recipient signature.</div>';
+  if(!photos.length)w+='<div class="notice ng" style="margin-bottom:8px">No photos captured — recommended but not mandatory.</div>';
+  document.getElementById('sub-w').innerHTML=w;
+  document.getElementById('pod-btn').disabled=!(r&&sigHas);
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+resetAll();
+if(localStorage.getItem('ib'))document.getElementById('install-banner').classList.add('hidden');
+if(window.navigator.standalone||window.matchMedia('(display-mode: standalone)').matches){
+  document.getElementById('install-banner').classList.add('hidden');
+}
+</script>
+<script>
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(function(){});
+}
+</script>
+</body>
+</html>
